@@ -1,6 +1,5 @@
 // ── API Service ──────────────────────────────────────────────
-const API_BASE = 'https://team-task-manager-l73q.onrender.com/api';
-console.log("API_BASE:", API_BASE);
+const API_BASE = 'https://team-task-manager-ho1p.onrender.com/api';
 
 const api = {
   token: null,
