@@ -331,7 +331,9 @@ Your app is now live:
 ## Screenshots
 
 > *(Add screenshots of dashboard, kanban board, and task detail modal here)*
-
+![alt text](image.png)
+![alt text](image-2.png)
+![alt text](image-1.png)
 ---
 
 ## Author
