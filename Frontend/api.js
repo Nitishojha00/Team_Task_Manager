@@ -1,8 +1,8 @@
 // ── API Service ──────────────────────────────────────────────
 const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
-  : '/api';
-
+  : 'https://teamtaskmanager-production-8c1f.up.railway.app/api';
+  
 const api = {
   token: null,
 
