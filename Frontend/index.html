@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>TaskFlow — Team Task Manager</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2300e5a0'/%3E%3Cpath d='M8 16l5 5 11-11' stroke='%23000' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div id="app">
+
+  <!-- ── Auth Page ── -->
+  <div id="page-auth" class="page active auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div class="logo-mark"><span class="dot"></span>TaskFlow</div>
+        <p>Collaborative Project Management</p>
+      </div>
+
+      <!-- Login -->
+      <div id="login-form">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Sign in to your workspace</p>
+        <form>
+          <div class="form-group">
+            <label>EMAIL</label>
+            <input id="login-email" type="email" class="form-control" placeholder="you@company.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>PASSWORD</label>
+            <input id="login-password" type="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div id="login-error" class="form-error hidden" style="margin-bottom:0.75rem"></div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg">Sign In</button>
+        </form>
+        <div class="auth-switch">Don't have an account? <a onclick="switchAuthTab('signup')">Create one →</a></div>
+      </div>
+
+      <!-- Signup -->
+      <div id="signup-form" class="hidden">
+        <h2>Create account</h2>
+        <p class="subtitle">Start collaborating today</p>
+        <form>
+          <div class="form-group">
+            <label>FULL NAME</label>
+            <input id="signup-name" type="text" class="form-control" placeholder="Jane Smith" autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label>EMAIL</label>
+            <input id="signup-email" type="email" class="form-control" placeholder="you@company.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>PASSWORD</label>
+            <input id="signup-password" type="password" class="form-control" placeholder="Min. 6 characters" autocomplete="new-password">
+          </div>
+          <div id="signup-error" class="form-error hidden" style="margin-bottom:0.75rem"></div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account</button>
+        </form>
+        <div class="auth-switch">Already have an account? <a onclick="switchAuthTab('login')">Sign in →</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── App Page ── -->
+  <div id="page-app" class="page app-layout">
+
+    <!-- Mobile overlay -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <span class="dot"></span>TaskFlow
+        <button class="btn btn-ghost btn-icon btn-sm sidebar-close" onclick="closeSidebar()" id="sidebar-close-btn">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-label">Main</div>
+        <div class="nav-item" data-view="dashboard" onclick="navTo('dashboard')">
+          <span class="icon" id="icon-dashboard"></span>Dashboard
+        </div>
+        <div class="nav-item" data-view="tasks" onclick="navTo('tasks')">
+          <span class="icon" id="icon-tasks"></span>All Tasks
+        </div>
+        <div class="nav-item" data-view="overdue" onclick="navTo('overdue')">
+          <span class="icon" id="icon-overdue"></span>Overdue
+        </div>
+        <div class="nav-item" data-view="projects" onclick="navTo('projects')">
+          <span class="icon" id="icon-projects"></span>Projects
+        </div>
+        <div class="nav-label" style="margin-top:1rem">My Projects</div>
+        <div id="projects-nav">
+          <div style="padding:0.4rem 0.75rem;font-size:0.72rem;color:var(--text3)">Loading...</div>
+        </div>
+        <div class="nav-item" style="color:var(--text3)" onclick="showCreateProjectModal()">
+          <span class="icon" id="icon-plus-nav"></span>New Project
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-card" id="sidebar-user"></div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <button class="btn btn-ghost btn-icon hamburger" id="hamburger-btn" onclick="openSidebar()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <div class="topbar-title" id="topbar-title">Dashboard</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary btn-sm" onclick="showCreateTaskModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="btn-text">New Task</span>
+          </button>
+        </div>
+      </header>
+      <main class="content-area" id="content-area">
+        <div class="empty-state"><div class="spinner"></div></div>
+      </main>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ALL JAVASCRIPT — inline so no MIME-type issues ever
+═══════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── Config ───────────────────────────────────────────────────
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? `http://${location.hostname}:5000/api`
+  : '/api';
+
+// ── State ────────────────────────────────────────────────────
+const state = {
+  user: null,
+  projects: [],
+  currentView: 'dashboard',
+  currentProject: null,
+  currentProjectRole: null,
+  activeProjectId: null
+};
+
+// ── Constants ────────────────────────────────────────────────
+const PROJECT_COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#06b6d4','#6366f1','#a855f7','#ec4899','#00e5a0','#4da6ff'];
+
+const Icons = {
+  dashboard: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+  tasks: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+  projects: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+  plus: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  trash: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  edit: `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  settings: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  logout: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  calendar: `<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+  members: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  kanban: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="18"/><rect x="10" y="3" width="5" height="12"/><rect x="17" y="3" width="4" height="8"/></svg>`,
+  overdue: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+};
+
+// ── API ──────────────────────────────────────────────────────
+const api = {
+  token: null,
+  setToken(t) { this.token = t; localStorage.setItem('tf_token', t); },
+  clearToken() { this.token = null; localStorage.removeItem('tf_token'); },
+  loadToken() { this.token = localStorage.getItem('tf_token'); return this.token; },
+  async request(method, path, body = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
+    const opts = { method, headers };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(`${API_BASE}${path}`, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.errors?.[0]?.msg || 'Request failed');
+    return data;
+  },
+  get: (path) => api.request('GET', path),
+  post: (path, body) => api.request('POST', path, body),
+  put: (path, body) => api.request('PUT', path, body),
+  delete: (path) => api.request('DELETE', path),
+  signup: (d) => api.post('/auth/signup', d),
+  login: (d) => api.post('/auth/login', d),
+  getMe: () => api.get('/auth/me'),
+  getProjects: () => api.get('/projects'),
+  createProject: (d) => api.post('/projects', d),
+  getProject: (id) => api.get(`/projects/${id}`),
+  updateProject: (id, d) => api.put(`/projects/${id}`, d),
+  deleteProject: (id) => api.delete(`/projects/${id}`),
+  addMember: (id, d) => api.post(`/projects/${id}/members`, d),
+  removeMember: (id, uid) => api.delete(`/projects/${id}/members/${uid}`),
+  getTasks(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return api.get(`/tasks${qs ? '?' + qs : ''}`);
+  },
+  getDashboard: () => api.get('/tasks/dashboard'),
+  getTask: (id) => api.get(`/tasks/${id}`),
+  createTask: (d) => api.post('/tasks', d),
+  updateTask: (id, d) => api.put(`/tasks/${id}`, d),
+  deleteTask: (id) => api.delete(`/tasks/${id}`),
+  addComment: (id, text) => api.post(`/tasks/${id}/comments`, { text }),
+};
+
+// ── Utilities ────────────────────────────────────────────────
+function toast(message, type = 'info', duration = 3500) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icons = {
+    success: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>`,
+    error: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+    info: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+    warning: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+  };
+  el.innerHTML = `${icons[type]||icons.info}<span>${message}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'slideInRight 0.25s ease reverse';
+    setTimeout(() => el.remove(), 250);
+  }, duration);
+}
+
+function avatar(user, size = '') {
+  if (!user) return `<div class="avatar ${size}" style="background:#2a2a35">?</div>`;
+  const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
+  return `<div class="avatar ${size}" style="background:${user.avatarColor || '#6366f1'}" title="${esc(user.name)}">${initials}</div>`;
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d), now = new Date();
+  const diff = Math.floor((now - date) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff/86400)}d ago`;
+  return date.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+
+function formatDueDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function isDueOverdue(d) {
+  if (!d) return false;
+  return new Date() > new Date(d);
+}
+
+function statusBadge(status) {
+  const map = { todo:['badge-todo','To Do'], in_progress:['badge-inprog','In Progress'], review:['badge-review','Review'], done:['badge-done','Done'] };
+  const [cls, label] = map[status] || ['badge-todo', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function priorityBadge(priority) {
+  const map = { low:['badge-low','Low'], medium:['badge-medium','Medium'], high:['badge-high','High'], urgent:['badge-urgent','⚡ Urgent'] };
+  const [cls, label] = map[priority] || ['badge-low', priority];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function priorityColor(priority) {
+  const map = { low:'var(--low)', medium:'var(--medium)', high:'var(--high)', urgent:'var(--urgent)' };
+  return map[priority] || 'var(--border2)';
+}
+
+function showModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
+function hideModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+
+function createModal(id, title, bodyHTML, footerHTML = '', size = '') {
+  const existing = document.getElementById(id);
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = id;
+  el.className = 'modal-overlay';
+  el.innerHTML = `
+    <div class="modal ${size}">
+      <div class="modal-header">
+        <h3>${title}</h3>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="document.getElementById('${id}').remove()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">${bodyHTML}</div>
+      ${footerHTML ? `<div class="modal-footer">${footerHTML}</div>` : ''}
+    </div>`;
+  el.addEventListener('click', (e) => { if (e.target === el) el.remove(); });
+  document.body.appendChild(el);
+  return el;
+}
+
+function setLoading(btn, loading) {
+  if (loading) {
+    btn.dataset.origText = btn.innerHTML;
+    btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>`;
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = btn.dataset.origText || btn.innerHTML;
+    btn.disabled = false;
+  }
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function selectColor(el, groupId) {
+  document.querySelectorAll(`#${groupId} .color-opt`).forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── Mobile Sidebar ────────────────────────────────────────────
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+function navTo(view, params = {}) {
+  closeSidebar();
+  navigateTo(view, params);
+}
+
+// ── Auth ─────────────────────────────────────────────────────
+function switchAuthTab(tab) {
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('signup-form').classList.toggle('hidden', tab !== 'signup');
+}
+
+function setupAuth() {
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('[type=submit]');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    clearAuthErr('login');
+    if (!email || !password) return showAuthErr('login', 'All fields required');
+    setLoading(btn, true);
+    try {
+      const { token, user } = await api.login({ email, password });
+      api.setToken(token);
+      state.user = user;
+      await showMainApp();
+      toast(`Welcome back, ${user.name}!`, 'success');
+    } catch (err) { showAuthErr('login', err.message); }
+    finally { setLoading(btn, false); }
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('[type=submit]');
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    clearAuthErr('signup');
+    if (!name || !email || !password) return showAuthErr('signup', 'All fields required');
+    if (password.length < 6) return showAuthErr('signup', 'Password must be at least 6 characters');
+    setLoading(btn, true);
+    try {
+      const { token, user } = await api.signup({ name, email, password });
+      api.setToken(token);
+      state.user = user;
+      await showMainApp();
+      toast(`Welcome, ${user.name}!`, 'success');
+    } catch (err) { showAuthErr('signup', err.message); }
+    finally { setLoading(btn, false); }
+  });
+}
+
+function showAuthErr(form, msg) {
+  const el = document.getElementById(`${form}-error`);
+  if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+}
+function clearAuthErr(form) {
+  const el = document.getElementById(`${form}-error`);
+  if (el) el.classList.add('hidden');
+}
+
+// ── Sidebar render ────────────────────────────────────────────
+async function renderSidebar() {
+  const u = state.user;
+  document.getElementById('sidebar-user').innerHTML = `
+    ${avatar(u, 'avatar-sm')}
+    <div class="info"><div class="name">${esc(u.name)}</div><div class="role">Member</div></div>
+    <button class="btn btn-ghost btn-icon btn-sm" onclick="logout()" title="Logout">${Icons.logout}</button>`;
+  await refreshProjectNav();
+}
+
+async function refreshProjectNav() {
+  try {
+    const { projects } = await api.getProjects();
+    state.projects = projects;
+    const navEl = document.getElementById('projects-nav');
+    if (!navEl) return;
+    if (!projects.length) {
+      navEl.innerHTML = `<div style="padding:0.4rem 0.75rem;font-size:0.72rem;color:var(--text3)">No projects yet</div>`;
+      return;
+    }
+    navEl.innerHTML = projects.map(p => `
+      <div class="nav-item" data-project="${p._id}" onclick="navTo('project',{projectId:'${p._id}'})">
+        <span class="nav-project-dot" style="background:${p.color}"></span>
+        <span class="truncate">${esc(p.name)}</span>
+      </div>`).join('');
+  } catch(e) { console.error('Nav error', e); }
+}
+
+// ── Router ───────────────────────────────────────────────────
+async function navigateTo(view, params = {}) {
+  state.currentView = view;
+  const container = document.getElementById('content-area');
+  const topbar = document.getElementById('topbar-title');
+
+  document.querySelectorAll('.nav-item[data-view]').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-project]').forEach(el => el.classList.remove('active'));
+
+  container.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+  switch (view) {
+    case 'dashboard':
+      topbar.textContent = 'Dashboard';
+      document.querySelector('[data-view="dashboard"]')?.classList.add('active');
+      await renderDashboard(container); break;
+    case 'tasks':
+      topbar.textContent = 'All Tasks';
+      document.querySelector('[data-view="tasks"]')?.classList.add('active');
+      await renderTasksPage(container, params.filters || {}); break;
+    case 'overdue':
+      topbar.textContent = 'Overdue Tasks';
+      document.querySelector('[data-view="overdue"]')?.classList.add('active');
+      await renderOverduePage(container); break;
+    case 'projects':
+      topbar.textContent = 'Projects';
+      document.querySelector('[data-view="projects"]')?.classList.add('active');
+      await renderProjectsPage(container); break;
+    case 'project':
+      state.activeProjectId = params.projectId;
+      document.querySelector(`[data-project="${params.projectId}"]`)?.classList.add('active');
+      await renderProjectDetail(container, params.projectId); break;
+    default:
+      topbar.textContent = 'Dashboard';
+      await renderDashboard(container);
+  }
+}
+
+function showAuthPage() {
+  document.getElementById('page-auth').classList.add('active');
+  document.getElementById('page-app').classList.remove('active');
+}
+
+async function showMainApp() {
+  document.getElementById('page-auth').classList.remove('active');
+  document.getElementById('page-app').classList.add('active');
+  document.getElementById('icon-dashboard').innerHTML = Icons.dashboard;
+  document.getElementById('icon-tasks').innerHTML = Icons.tasks;
+  document.getElementById('icon-overdue').innerHTML = Icons.overdue;
+  document.getElementById('icon-projects').innerHTML = Icons.projects;
+  document.getElementById('icon-plus-nav').innerHTML = Icons.plus;
+  await renderSidebar();
+  await navigateTo('dashboard');
+}
+
+async function logout() {
+  api.clearToken();
+  state.user = null;
+  state.projects = [];
+  state.currentView = 'dashboard';
+  state.activeProjectId = null;
+  showAuthPage();
+  switchAuthTab('login');
+}
+
+// ── Dashboard ─────────────────────────────────────────────────
+async function renderDashboard(container) {
+  try {
+    const { stats, byStatus, byPriority, recentTasks, projects } = await api.getDashboard();
+    const donePercent = stats.totalTasks ? Math.round((byStatus.done / stats.totalTasks) * 100) : 0;
+    container.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent-color:#4da6ff">
+          <div class="label">Total Tasks</div><div class="value">${stats.totalTasks}</div>
+          <div class="sub">across ${stats.projectCount} project${stats.projectCount!==1?'s':''}</div>
+          <div class="icon">${Icons.tasks}</div>
+        </div>
+        <div class="stat-card" style="--accent-color:var(--accent)">
+          <div class="label">Assigned to Me</div><div class="value">${stats.myTasks}</div>
+          <div class="sub">active tasks</div><div class="icon">${Icons.members}</div>
+        </div>
+        <div class="stat-card" style="--accent-color:var(--danger)">
+          <div class="label">Overdue</div><div class="value">${stats.overdueTasks}</div>
+          <div class="sub"><a href="#" onclick="navigateTo('overdue');return false;" style="color:var(--danger)">view all →</a></div>
+          <div class="icon">${Icons.overdue}</div>
+        </div>
+        <div class="stat-card" style="--accent-color:var(--warn)">
+          <div class="label">Completion</div><div class="value">${donePercent}%</div>
+          <div class="sub">${byStatus.done||0} of ${stats.totalTasks} done</div>
+          <div class="icon">${Icons.kanban}</div>
+        </div>
+      </div>
+      <div class="dash-charts">
+        <div class="card">
+          <div class="card-header"><h3 style="font-size:0.9rem">Tasks by Status</h3></div>
+          ${chartBars([
+            {label:'To Do',count:byStatus.todo||0,color:'var(--todo)'},
+            {label:'In Progress',count:byStatus.in_progress||0,color:'var(--inprog)'},
+            {label:'Review',count:byStatus.review||0,color:'var(--review)'},
+            {label:'Done',count:byStatus.done||0,color:'var(--done)'}
+          ], stats.totalTasks)}
+        </div>
+        <div class="card">
+          <div class="card-header"><h3 style="font-size:0.9rem">Open by Priority</h3></div>
+          ${chartBars([
+            {label:'Urgent',count:byPriority.urgent||0,color:'var(--urgent)'},
+            {label:'High',count:byPriority.high||0,color:'var(--high)'},
+            {label:'Medium',count:byPriority.medium||0,color:'var(--medium)'},
+            {label:'Low',count:byPriority.low||0,color:'var(--low)'}
+          ], Math.max(byPriority.urgent||0,byPriority.high||0,byPriority.medium||0,byPriority.low||0,1), true)}
+        </div>
+      </div>
+      <div class="dash-bottom">
+        <div class="card">
+          <div class="card-header">
+            <h3 style="font-size:0.9rem">Recent Tasks</h3>
+            <a href="#" onclick="navigateTo('tasks');return false;" style="font-size:0.75rem;color:var(--accent)">View all →</a>
+          </div>
+          ${recentTasks.length
+            ? `<div class="task-list">${recentTasks.map(t => miniTaskCard(t)).join('')}</div>`
+            : `<div class="empty-state" style="padding:1.5rem">${Icons.tasks}<p>No tasks yet</p></div>`}
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3 style="font-size:0.9rem">My Projects</h3>
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="navigateTo('projects')">${Icons.projects}</button>
+          </div>
+          ${projects.map(p=>`
+            <div class="member-item" style="cursor:pointer" onclick="navigateTo('project',{projectId:'${p._id}'})">
+              <div style="width:10px;height:10px;border-radius:50%;background:${p.color};flex-shrink:0"></div>
+              <div class="info"><div class="name">${esc(p.name)}</div></div>
+            </div>`).join('') || `<p style="font-size:0.78rem;color:var(--text3)">No projects yet</p>`}
+          <button class="btn btn-outline btn-sm btn-full mt-3" onclick="showCreateProjectModal()">${Icons.plus} New Project</button>
+        </div>
+      </div>`;
+  } catch(err) {
+    container.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${err.message}</p></div>`;
+  }
+}
+
+function chartBars(items, max, relativeMax = false) {
+  return items.map(({label,count,color}) => {
+    const pct = max ? Math.round((count/max)*100) : 0;
+    return `<div class="chart-bar-row">
+      <div class="bar-label">${label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="bar-count">${count}</div>
+    </div>`;
+  }).join('');
+}
+
+function miniTaskCard(t) {
+  const overdue = t.isOverdue || isDueOverdue(t.dueDate);
+  return `<div class="task-card ${overdue?'overdue':''}" style="--priority-color:${priorityColor(t.priority)}" onclick="showTaskDetail('${t._id}')">
+    <div class="task-body">
+      <div class="task-title ${t.status==='done'?'done':''}">${esc(t.title)}</div>
+      <div class="task-meta">
+        ${statusBadge(t.status)}
+        ${t.project?`<span style="font-size:0.68rem;color:var(--text3)">${esc(t.project.name)}</span>`:''}
+      </div>
+    </div>
+    <div class="task-right">
+      ${t.assignee?avatar(t.assignee,'avatar-sm'):''}
+      ${t.dueDate?`<div class="due-date ${overdue?'overdue':''}">${Icons.calendar}${formatDueDate(t.dueDate)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+// ── Tasks Page ────────────────────────────────────────────────
+async function renderTasksPage(container, filters = {}) {
+  try {
+    const [{ tasks }, { projects }] = await Promise.all([api.getTasks(filters), api.getProjects()]);
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem">
+        <div>
+          <h2 style="font-size:1.25rem">All Tasks</h2>
+          <p style="font-size:0.78rem;color:var(--text3)">${tasks.length} task${tasks.length!==1?'s':''}</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="showCreateTaskModal()">${Icons.plus} New Task</button>
+      </div>
+      <div class="filters-bar">
+        <input class="search-input" id="task-search" placeholder="Search tasks..." value="${esc(filters.search||'')}">
+        <select class="filter-select" id="filter-project" onchange="applyTaskFilters()">
+          <option value="">All Projects</option>
+          ${projects.map(p=>`<option value="${p._id}" ${filters.project===p._id?'selected':''}>${esc(p.name)}</option>`).join('')}
+        </select>
+        <select class="filter-select" id="filter-status" onchange="applyTaskFilters()">
+          <option value="">All Status</option>
+          <option value="todo" ${filters.status==='todo'?'selected':''}>To Do</option>
+          <option value="in_progress" ${filters.status==='in_progress'?'selected':''}>In Progress</option>
+          <option value="review" ${filters.status==='review'?'selected':''}>Review</option>
+          <option value="done" ${filters.status==='done'?'selected':''}>Done</option>
+        </select>
+        <select class="filter-select" id="filter-priority" onchange="applyTaskFilters()">
+          <option value="">All Priority</option>
+          <option value="urgent" ${filters.priority==='urgent'?'selected':''}>Urgent</option>
+          <option value="high" ${filters.priority==='high'?'selected':''}>High</option>
+          <option value="medium" ${filters.priority==='medium'?'selected':''}>Medium</option>
+          <option value="low" ${filters.priority==='low'?'selected':''}>Low</option>
+        </select>
+        <select class="filter-select" id="filter-assignee" onchange="applyTaskFilters()">
+          <option value="">All Assignees</option>
+          <option value="me" ${filters.assignee==='me'?'selected':''}>Assigned to Me</option>
+        </select>
+      </div>
+      <div class="task-list" id="tasks-list">
+        ${tasks.length ? tasks.map(t=>fullTaskCard(t)).join('') : `
+          <div class="empty-state">${Icons.tasks}<h3>No tasks found</h3><p>Try adjusting filters or create a new task</p></div>`}
+      </div>`;
+    let searchTimer;
+    document.getElementById('task-search').addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applyTaskFilters, 400);
+    });
+  } catch(err) {
+    container.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${err.message}</p></div>`;
+  }
+}
+
+function applyTaskFilters() {
+  const filters = {};
+  const search = document.getElementById('task-search')?.value.trim();
+  const project = document.getElementById('filter-project')?.value;
+  const status = document.getElementById('filter-status')?.value;
+  const priority = document.getElementById('filter-priority')?.value;
+  const assignee = document.getElementById('filter-assignee')?.value;
+  if (search) filters.search = search;
+  if (project) filters.project = project;
+  if (status) filters.status = status;
+  if (priority) filters.priority = priority;
+  if (assignee) filters.assignee = assignee;
+  renderTasksPage(document.getElementById('content-area'), filters);
+}
+
+async function renderOverduePage(container) {
+  try {
+    const { tasks } = await api.getTasks({ overdue: 'true' });
+    container.innerHTML = `
+      <div style="margin-bottom:1.25rem">
+        <h2 style="font-size:1.25rem">Overdue Tasks</h2>
+        <p style="font-size:0.78rem;color:var(--danger)">${tasks.length} overdue task${tasks.length!==1?'s':''}</p>
+      </div>
+      <div class="task-list">
+        ${tasks.length ? tasks.map(t=>fullTaskCard(t)).join('') : `
+          <div class="empty-state">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:0.3"><path d="M20 6L9 17l-5-5"/></svg>
+            <h3>No overdue tasks!</h3><p>You're all caught up 🎉</p>
+          </div>`}
+      </div>`;
+  } catch(err) {
+    container.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${err.message}</p></div>`;
+  }
+}
+
+function fullTaskCard(t) {
+  const overdue = t.isOverdue || isDueOverdue(t.dueDate);
+  return `<div class="task-card ${overdue?'overdue':''}" style="--priority-color:${priorityColor(t.priority)}" onclick="showTaskDetail('${t._id}')">
+    <div class="task-body">
+      <div class="task-title ${t.status==='done'?'done':''}">${esc(t.title)}</div>
+      <div class="task-meta">
+        ${statusBadge(t.status)}${priorityBadge(t.priority)}
+        ${t.project?`<span style="font-size:0.68rem;color:var(--text3)">${esc(t.project.name)}</span>`:''}
+        ${t.dueDate?`<div class="due-date ${overdue?'overdue':''}">${Icons.calendar}${formatDueDate(t.dueDate)}</div>`:''}
+      </div>
+    </div>
+    <div class="task-right">
+      ${t.assignee?avatar(t.assignee,'avatar-sm'):`<span style="font-size:0.7rem;color:var(--text3)">—</span>`}
+      <span style="font-size:0.68rem;color:var(--text3)">${formatDate(t.createdAt)}</span>
+    </div>
+  </div>`;
+}
+
+// ── Create Task Modal ──────────────────────────────────────────
+async function showCreateTaskModal(projectId = '', defaultStatus = 'todo') {
+  const { projects } = await api.getProjects();
+  if (!projects.length) {
+    if (confirm('You need a project first. Create one now?')) showCreateProjectModal(p => showCreateTaskModal(p._id));
+    return;
+  }
+  const body = `
+    <div class="form-group">
+      <label>TASK TITLE *</label>
+      <input id="ct-title" class="form-control" placeholder="What needs to be done?" maxlength="200">
+      <div id="ct-title-err" class="form-error hidden"></div>
+    </div>
+    <div class="form-group">
+      <label>DESCRIPTION</label>
+      <textarea id="ct-desc" class="form-control" placeholder="Add more details..." rows="3" maxlength="2000"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>PROJECT *</label>
+        <select id="ct-project" class="form-control" onchange="loadProjectMembers(this.value,'ct-assignee')">
+          <option value="">Select project...</option>
+          ${projects.map(p=>`<option value="${p._id}" ${p._id===projectId?'selected':''}>${esc(p.name)}</option>`).join('')}
+        </select>
+        <div id="ct-project-err" class="form-error hidden"></div>
+      </div>
+      <div class="form-group">
+        <label>ASSIGNEE</label>
+        <select id="ct-assignee" class="form-control"><option value="">Unassigned</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>STATUS</label>
+        <select id="ct-status" class="form-control">
+          <option value="todo" ${defaultStatus==='todo'?'selected':''}>To Do</option>
+          <option value="in_progress" ${defaultStatus==='in_progress'?'selected':''}>In Progress</option>
+          <option value="review" ${defaultStatus==='review'?'selected':''}>Review</option>
+          <option value="done" ${defaultStatus==='done'?'selected':''}>Done</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>PRIORITY</label>
+        <select id="ct-priority" class="form-control">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>DUE DATE</label>
+      <input id="ct-due" type="date" class="form-control">
+    </div>`;
+  const footer = `
+    <button class="btn btn-outline" onclick="document.getElementById('modal-create-task').remove()">Cancel</button>
+    <button class="btn btn-primary" id="ct-submit-btn" onclick="submitCreateTask()">Create Task</button>`;
+  createModal('modal-create-task', 'New Task', body, footer);
+  document.getElementById('ct-title').focus();
+  if (projectId) loadProjectMembers(projectId, 'ct-assignee');
+}
+
+async function loadProjectMembers(projectId, selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel || !projectId) return;
+  try {
+    const { project } = await api.getProject(projectId);
+    sel.innerHTML = '<option value="">Unassigned</option>' +
+      project.members.map(m=>`<option value="${m.user._id}">${esc(m.user.name)}</option>`).join('');
+  } catch(e) {}
+}
+
+async function submitCreateTask() {
+  const title = document.getElementById('ct-title').value.trim();
+  const description = document.getElementById('ct-desc').value.trim();
+  const project = document.getElementById('ct-project').value;
+  const assignee = document.getElementById('ct-assignee').value;
+  const status = document.getElementById('ct-status').value;
+  const priority = document.getElementById('ct-priority').value;
+  const dueDate = document.getElementById('ct-due').value;
+
+  document.getElementById('ct-title-err').classList.add('hidden');
+  document.getElementById('ct-project-err').classList.add('hidden');
+  let valid = true;
+  if (!title) {
+    document.getElementById('ct-title-err').textContent = 'Title is required';
+    document.getElementById('ct-title-err').classList.remove('hidden');
+    valid = false;
+  }
+  if (!project) {
+    document.getElementById('ct-project-err').textContent = 'Project is required';
+    document.getElementById('ct-project-err').classList.remove('hidden');
+    valid = false;
+  }
+  if (!valid) return;
+
+  const btn = document.getElementById('ct-submit-btn');
+  setLoading(btn, true);
+  try {
+    const payload = { title, project, status, priority };
+    if (description) payload.description = description;
+    if (assignee) payload.assignee = assignee;
+    if (dueDate) payload.dueDate = dueDate;
+    await api.createTask(payload);
+    document.getElementById('modal-create-task')?.remove();
+    toast('Task created!', 'success');
+    refreshCurrentView();
+  } catch(err) {
+    toast(err.message, 'error');
+    setLoading(btn, false);
+  }
+}
+
+// ── Task Detail Modal ──────────────────────────────────────────
+async function showTaskDetail(taskId) {
+  try {
+    const { task } = await api.getTask(taskId);
+    const overdue = isDueOverdue(task.dueDate) && task.status !== 'done';
+    const projectMembers = task.project?.members || [];
+    const body = `
+      <div class="task-detail-layout">
+        <div class="task-detail-main">
+          <div class="form-group">
+            <label>TITLE</label>
+            <input id="td-title" class="form-control" value="${esc(task.title)}" maxlength="200">
+          </div>
+          <div class="form-group">
+            <label>DESCRIPTION</label>
+            <textarea id="td-desc" class="form-control" rows="4" maxlength="2000">${esc(task.description||'')}</textarea>
+          </div>
+        </div>
+        <div class="task-detail-side">
+          <div class="form-group">
+            <label>STATUS</label>
+            <select id="td-status" class="form-control">
+              <option value="todo" ${task.status==='todo'?'selected':''}>To Do</option>
+              <option value="in_progress" ${task.status==='in_progress'?'selected':''}>In Progress</option>
+              <option value="review" ${task.status==='review'?'selected':''}>Review</option>
+              <option value="done" ${task.status==='done'?'selected':''}>Done</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>PRIORITY</label>
+            <select id="td-priority" class="form-control">
+              <option value="low" ${task.priority==='low'?'selected':''}>Low</option>
+              <option value="medium" ${task.priority==='medium'?'selected':''}>Medium</option>
+              <option value="high" ${task.priority==='high'?'selected':''}>High</option>
+              <option value="urgent" ${task.priority==='urgent'?'selected':''}>Urgent</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ASSIGNEE</label>
+            <select id="td-assignee" class="form-control">
+              <option value="">Unassigned</option>
+              ${projectMembers.map(m=>`<option value="${m.user._id||m.user}" ${(task.assignee?._id||task.assignee)==(m.user._id||m.user)?'selected':''}>${esc(m.user.name||'')}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>DUE DATE</label>
+            <input id="td-due" type="date" class="form-control ${overdue?'error':''}" value="${task.dueDate?new Date(task.dueDate).toISOString().split('T')[0]:''}">
+          </div>
+          <div style="font-size:0.72rem;color:var(--text3);line-height:1.8">
+            <div>By ${esc(task.creator?.name||'Unknown')}</div>
+            <div>${formatDate(task.createdAt)}</div>
+            ${task.project?`<div>Project: <span style="color:var(--text2)">${esc(task.project.name)}</span></div>`:''}
+          </div>
+        </div>
+      </div>
+      <hr class="divider">
+      <h4 style="font-size:0.8rem;margin-bottom:0.75rem;color:var(--text2)" id="comment-count-title">COMMENTS (${task.comments?.length||0})</h4>
+      <div id="comments-list" style="margin-bottom:0.75rem">
+        ${(task.comments||[]).length?(task.comments||[]).map(c=>commentHTML(c)).join(''):`<p style="font-size:0.78rem;color:var(--text3)">No comments yet</p>`}
+      </div>
+      <div style="display:flex;gap:0.75rem">
+        <input id="td-comment" class="form-control" placeholder="Add a comment..." style="flex:1">
+        <button class="btn btn-outline btn-sm" onclick="submitComment('${taskId}')">Post</button>
+      </div>`;
+    const footer = `
+      <button class="btn btn-danger btn-sm" onclick="confirmDeleteTask('${taskId}')">${Icons.trash} Delete</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-outline" onclick="document.getElementById('modal-task-detail').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUpdateTask('${taskId}')">Save</button>`;
+    createModal('modal-task-detail', esc(task.title), body, footer, 'modal-lg');
+    document.getElementById('td-comment').addEventListener('keydown', e => { if (e.key==='Enter') submitComment(taskId); });
+  } catch(err) { toast(err.message, 'error'); }
+}
+
+function commentHTML(c) {
+  return `<div style="display:flex;gap:0.625rem;margin-bottom:0.75rem">
+    ${avatar(c.author,'avatar-sm')}
+    <div style="flex:1">
+      <div style="font-size:0.75rem;color:var(--text2);margin-bottom:0.25rem">
+        <strong>${esc(c.author?.name)}</strong>
+        <span style="color:var(--text3);margin-left:0.375rem">${formatDate(c.createdAt)}</span>
+      </div>
+      <div style="font-size:0.82rem;color:var(--text);white-space:pre-wrap">${esc(c.text)}</div>
+    </div>
+  </div>`;
+}
+
+async function submitUpdateTask(taskId) {
+  const title = document.getElementById('td-title').value.trim();
+  if (!title) { toast('Title is required','error'); return; }
+  try {
+    await api.updateTask(taskId, {
+      title,
+      description: document.getElementById('td-desc').value.trim(),
+      status: document.getElementById('td-status').value,
+      priority: document.getElementById('td-priority').value,
+      assignee: document.getElementById('td-assignee').value || null,
+      dueDate: document.getElementById('td-due').value || null
+    });
+    document.getElementById('modal-task-detail')?.remove();
+    toast('Task updated!','success');
+    refreshCurrentView();
+  } catch(err) { toast(err.message,'error'); }
+}
+
+async function submitComment(taskId) {
+  const input = document.getElementById('td-comment');
+  const text = input.value.trim();
+  if (!text) return;
+  try {
+    const { comments } = await api.addComment(taskId, text);
+    input.value = '';
+    document.getElementById('comments-list').innerHTML = comments.map(c=>commentHTML(c)).join('');
+    const el = document.getElementById('comment-count-title');
+    if (el) el.textContent = `COMMENTS (${comments.length})`;
+  } catch(err) { toast(err.message,'error'); }
+}
+
+async function confirmDeleteTask(taskId) {
+  if (!confirm('Delete this task permanently?')) return;
+  try {
+    await api.deleteTask(taskId);
+    document.getElementById('modal-task-detail')?.remove();
+    toast('Task deleted','success');
+    refreshCurrentView();
+  } catch(err) { toast(err.message,'error'); }
+}
+
+function refreshCurrentView() {
+  if (state.currentView==='project') navigateTo('project',{projectId:state.activeProjectId});
+  else if (state.currentView==='tasks') navigateTo('tasks');
+  else if (state.currentView==='overdue') navigateTo('overdue');
+  else navigateTo('dashboard');
+}
+
+// ── Projects Page ─────────────────────────────────────────────
+async function renderProjectsPage(container) {
+  try {
+    const { projects } = await api.getProjects();
+    state.projects = projects;
+    await refreshProjectNav();
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <h2 style="font-size:1.25rem">Projects</h2>
+          <p style="font-size:0.78rem;color:var(--text3);margin-top:0.25rem">${projects.length} project${projects.length!==1?'s':''}</p>
+        </div>
+        <button class="btn btn-primary" onclick="showCreateProjectModal()">${Icons.plus} New Project</button>
+      </div>
+      ${projects.length
+        ? `<div class="projects-grid">${projects.map(p=>projectCard(p)).join('')}</div>`
+        : `<div class="empty-state" style="padding:4rem 1rem">${Icons.projects}<h3>No projects yet</h3><p>Create your first project</p><button class="btn btn-primary mt-4" onclick="showCreateProjectModal()">${Icons.plus} Create Project</button></div>`}`;
+  } catch(err) {
+    container.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${err.message}</p></div>`;
+  }
+}
+
+function projectCard(p) {
+  const memberCount = p.members?.length || 0;
+  return `<div class="project-card" style="--project-color:${p.color}" onclick="navigateTo('project',{projectId:'${p._id}'})">
+    <div class="p-name">${esc(p.name)}</div>
+    <div class="p-desc">${esc(p.description||'No description')}</div>
+    <div class="p-footer">
+      <div class="p-stats"><span>${Icons.members} ${memberCount}</span></div>
+      <div class="avatar-stack">
+        ${(p.members||[]).slice(0,4).map(m=>avatar(m.user,'avatar-sm')).join('')}
+        ${memberCount>4?`<div class="avatar avatar-sm" style="background:var(--bg4);color:var(--text2)">+${memberCount-4}</div>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function showCreateProjectModal(onSuccess) {
+  const body = `
+    <div class="form-group">
+      <label>PROJECT NAME *</label>
+      <input id="cp-name" class="form-control" placeholder="e.g. Website Redesign" maxlength="100">
+      <div id="cp-name-err" class="form-error hidden"></div>
+    </div>
+    <div class="form-group">
+      <label>DESCRIPTION</label>
+      <textarea id="cp-desc" class="form-control" placeholder="What is this project about?" rows="3" maxlength="500"></textarea>
+    </div>
+    <div class="form-group">
+      <label>COLOR</label>
+      <div class="color-options" id="cp-colors">
+        ${PROJECT_COLORS.map((c,i)=>`<div class="color-opt ${i===5?'selected':''}" style="background:${c}" data-color="${c}" onclick="selectColor(this,'cp-colors')"></div>`).join('')}
+      </div>
+    </div>`;
+  const footer = `
+    <button class="btn btn-outline" onclick="document.getElementById('modal-create-project').remove()">Cancel</button>
+    <button class="btn btn-primary" id="cp-submit-btn" onclick="submitCreateProject()">Create Project</button>`;
+  createModal('modal-create-project','New Project',body,footer);
+  document.getElementById('cp-name').focus();
+  window._createProjectCallback = onSuccess || null;
+}
+
+async function submitCreateProject() {
+  const name = document.getElementById('cp-name').value.trim();
+  const description = document.getElementById('cp-desc').value.trim();
+  const colorEl = document.querySelector('#cp-colors .color-opt.selected');
+  const color = colorEl?.dataset.color || '#6366f1';
+  if (!name) {
+    document.getElementById('cp-name-err').textContent = 'Project name is required';
+    document.getElementById('cp-name-err').classList.remove('hidden');
+    return;
+  }
+  const btn = document.getElementById('cp-submit-btn');
+  setLoading(btn, true);
+  try {
+    const { project } = await api.createProject({ name, description, color });
+    document.getElementById('modal-create-project')?.remove();
+    toast(`Project "${project.name}" created!`,'success');
+    await refreshProjectNav();
+    if (window._createProjectCallback) window._createProjectCallback(project);
+    else navigateTo('project',{projectId:project._id});
+  } catch(err) {
+    toast(err.message,'error');
+    setLoading(btn, false);
+  }
+}
+
+async function renderProjectDetail(container, projectId) {
+  try {
+    const [{ project, role }, { tasks }] = await Promise.all([api.getProject(projectId), api.getTasks({project:projectId})]);
+    state.currentProject = project;
+    state.currentProjectRole = role;
+    document.getElementById('topbar-title').innerHTML = `<span style="color:var(--text3)">Projects /</span> ${esc(project.name)}`;
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div style="width:12px;height:12px;border-radius:50%;background:${project.color};flex-shrink:0"></div>
+          <div>
+            <h2 style="font-size:1.2rem">${esc(project.name)}</h2>
+            ${project.description?`<p style="font-size:0.78rem;color:var(--text3)">${esc(project.description)}</p>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem">
+          ${role==='admin'?`<button class="btn btn-outline btn-sm" onclick="showProjectSettingsModal('${project._id}')">${Icons.settings} Settings</button>`:''}
+          <button class="btn btn-primary btn-sm" onclick="showCreateTaskModal('${project._id}')">${Icons.plus} Add Task</button>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchProjectTab(this,'board','${projectId}')">Kanban</button>
+        <button class="tab-btn" onclick="switchProjectTab(this,'list','${projectId}')">List</button>
+        <button class="tab-btn" onclick="switchProjectTab(this,'members','${projectId}')">Members (${project.members.length})</button>
+      </div>
+      <div id="project-tab-content"></div>`;
+    renderKanbanBoard(document.getElementById('project-tab-content'), tasks, project, role);
+  } catch(err) {
+    container.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${err.message}</p></div>`;
+  }
+}
+
+async function switchProjectTab(btn, tab, projectId) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const content = document.getElementById('project-tab-content');
+  content.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+  if (tab==='members') {
+    const { project, role } = await api.getProject(projectId);
+    renderMembersTab(content, project, role);
+  } else {
+    const { tasks } = await api.getTasks({project:projectId});
+    if (tab==='board') renderKanbanBoard(content, tasks, state.currentProject, state.currentProjectRole);
+    else renderTaskListView(content, tasks, state.currentProject);
+  }
+}
+
+function renderKanbanBoard(container, tasks, project, role) {
+  const columns = [
+    {key:'todo',label:'To Do',color:'var(--todo)'},
+    {key:'in_progress',label:'In Progress',color:'var(--inprog)'},
+    {key:'review',label:'Review',color:'var(--review)'},
+    {key:'done',label:'Done',color:'var(--done)'},
+  ];
+  const byStatus = {};
+  columns.forEach(c=>{byStatus[c.key]=[];});
+  tasks.forEach(t=>{if(byStatus[t.status])byStatus[t.status].push(t);});
+  container.innerHTML = `<div class="kanban-board">
+    ${columns.map(col=>`
+      <div class="kanban-col">
+        <div class="kanban-col-header">
+          <div class="col-title"><div class="col-dot" style="background:${col.color}"></div>${col.label}</div>
+          <span style="font-size:0.72rem;color:var(--text3)">${byStatus[col.key].length}</span>
+        </div>
+        ${byStatus[col.key].map(t=>kanbanTaskCard(t)).join('')}
+        <button class="btn btn-ghost btn-sm btn-full mt-2" style="border:1px dashed var(--border);color:var(--text3)"
+          onclick="showCreateTaskModal('${project._id}','${col.key}')">
+          ${Icons.plus} Add Task
+        </button>
+      </div>`).join('')}
+  </div>`;
+}
+
+function kanbanTaskCard(t) {
+  const overdue = t.isOverdue || isDueOverdue(t.dueDate);
+  return `<div class="task-card ${overdue?'overdue':''}" style="--priority-color:${priorityColor(t.priority)};flex-direction:column;gap:0.5rem" onclick="showTaskDetail('${t._id}')">
+    <div class="task-title ${t.status==='done'?'done':''}">${esc(t.title)}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem">
+      <div>${priorityBadge(t.priority)}</div>
+      <div style="display:flex;align-items:center;gap:0.375rem">
+        ${t.dueDate?`<div class="due-date ${overdue?'overdue':''}">${Icons.calendar}${formatDueDate(t.dueDate)}</div>`:''}
+        ${t.assignee?avatar(t.assignee,'avatar-sm'):''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTaskListView(container, tasks, project) {
+  container.innerHTML = `<div class="task-list">
+    ${tasks.length ? tasks.map(t=>fullTaskCard(t)).join('') : `
+      <div class="empty-state"><p>No tasks yet. <a href="#" onclick="showCreateTaskModal('${project._id}');return false;" style="color:var(--accent)">Create one →</a></p></div>`}
+  </div>`;
+}
+
+function renderMembersTab(container, project, role) {
+  container.innerHTML = `
+    ${role==='admin'?`
+      <div class="card" style="margin-bottom:1rem">
+        <h4 style="font-size:0.85rem;margin-bottom:0.75rem">Add Member</h4>
+        <div class="add-member-row">
+          <input id="add-member-email" class="form-control" placeholder="member@email.com" style="flex:1">
+          <select id="add-member-role" class="form-control" style="width:120px">
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
+          <button class="btn btn-primary" onclick="addMember('${project._id}')">Add</button>
+        </div>
+        <div id="add-member-err" class="form-error hidden mt-1"></div>
+      </div>` : ''}
+    <div class="card">
+      <h4 style="font-size:0.85rem;margin-bottom:0.75rem">Team Members (${project.members.length})</h4>
+      ${project.members.map(m=>`
+        <div class="member-item">
+          ${avatar(m.user)}
+          <div class="info">
+            <div class="name">${esc(m.user.name)} ${m.user._id===project.owner?._id?`<span style="font-size:0.65rem;color:var(--accent)">OWNER</span>`:''}</div>
+            <div class="email">${esc(m.user.email)}</div>
+          </div>
+          <span class="badge ${m.role==='admin'?'badge-inprog':'badge-todo'}">${m.role}</span>
+          ${role==='admin'&&m.user._id!==project.owner?._id?`<button class="btn btn-danger btn-sm" onclick="removeMember('${project._id}','${m.user._id}')">Remove</button>`:''}
+        </div>`).join('')}
+    </div>`;
+}
+
+async function addMember(projectId) {
+  const email = document.getElementById('add-member-email').value.trim();
+  const memberRole = document.getElementById('add-member-role').value;
+  const errEl = document.getElementById('add-member-err');
+  errEl.classList.add('hidden');
+  if (!email) { errEl.textContent='Email is required'; errEl.classList.remove('hidden'); return; }
+  try {
+    await api.addMember(projectId, {email, role:memberRole});
+    toast('Member added!','success');
+    document.getElementById('add-member-email').value = '';
+    const { project, role } = await api.getProject(projectId);
+    state.currentProject = project;
+    renderMembersTab(document.getElementById('project-tab-content'), project, role);
+    await refreshProjectNav();
+  } catch(err) { errEl.textContent=err.message; errEl.classList.remove('hidden'); }
+}
+
+async function removeMember(projectId, userId) {
+  if (!confirm('Remove this member?')) return;
+  try {
+    await api.removeMember(projectId, userId);
+    toast('Member removed','success');
+    const { project, role } = await api.getProject(projectId);
+    state.currentProject = project;
+    renderMembersTab(document.getElementById('project-tab-content'), project, role);
+  } catch(err) { toast(err.message,'error'); }
+}
+
+async function showProjectSettingsModal(projectId) {
+  const { project } = await api.getProject(projectId);
+  const body = `
+    <div class="form-group">
+      <label>PROJECT NAME</label>
+      <input id="ps-name" class="form-control" value="${esc(project.name)}" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label>DESCRIPTION</label>
+      <textarea id="ps-desc" class="form-control" rows="3" maxlength="500">${esc(project.description||'')}</textarea>
+    </div>
+    <div class="form-group">
+      <label>COLOR</label>
+      <div class="color-options" id="ps-colors">
+        ${PROJECT_COLORS.map(c=>`<div class="color-opt ${c===project.color?'selected':''}" style="background:${c}" data-color="${c}" onclick="selectColor(this,'ps-colors')"></div>`).join('')}
+      </div>
+    </div>
+    <hr class="divider">
+    <div style="background:rgba(255,77,109,0.05);border:1px solid rgba(255,77,109,0.2);border-radius:var(--radius);padding:1rem">
+      <h4 style="font-size:0.85rem;color:var(--danger);margin-bottom:0.5rem">Danger Zone</h4>
+      <p style="font-size:0.78rem;color:var(--text2);margin-bottom:0.75rem">Deleting removes all tasks permanently.</p>
+      <button class="btn btn-danger btn-sm" onclick="deleteProject('${projectId}')">Delete Project</button>
+    </div>`;
+  const footer = `
+    <button class="btn btn-outline" onclick="document.getElementById('modal-project-settings').remove()">Cancel</button>
+    <button class="btn btn-primary" onclick="submitUpdateProject('${projectId}')">Save Changes</button>`;
+  createModal('modal-project-settings','Project Settings',body,footer);
+}
+
+async function submitUpdateProject(projectId) {
+  const name = document.getElementById('ps-name').value.trim();
+  const description = document.getElementById('ps-desc').value.trim();
+  const color = document.querySelector('#ps-colors .color-opt.selected')?.dataset.color;
+  try {
+    await api.updateProject(projectId, {name,description,color});
+    document.getElementById('modal-project-settings')?.remove();
+    toast('Project updated!','success');
+    await refreshProjectNav();
+    navigateTo('project',{projectId});
+  } catch(err) { toast(err.message,'error'); }
+}
+
+async function deleteProject(projectId) {
+  if (!confirm('Delete this project and ALL its tasks?')) return;
+  try {
+    await api.deleteProject(projectId);
+    document.getElementById('modal-project-settings')?.remove();
+    toast('Project deleted','success');
+    await refreshProjectNav();
+    navigateTo('projects');
+  } catch(err) { toast(err.message,'error'); }
+}
+
+// ── Boot ─────────────────────────────────────────────────────
+(async function boot() {
+  setupAuth();
+  const token = api.loadToken();
+  if (!token) { showAuthPage(); return; }
+  try {
+    const { user } = await api.getMe();
+    state.user = user;
+    await showMainApp();
+  } catch {
+    api.clearToken();
+    showAuthPage();
+  }
+})();
+</script>
+</body>
+</html>
