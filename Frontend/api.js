@@ -1,5 +1,6 @@
 // ── API Service ──────────────────────────────────────────────
 const API_BASE = 'https://teamtaskmanager-production-8c1f.up.railway.app/api';
+console.log("API_BASE:", API_BASE);
 
 const api = {
   token: null,
