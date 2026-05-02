@@ -336,6 +336,16 @@ Your app is now live:
 ![alt text](image-1.png)
 ---
 
+
+## 🎥 Working Demo Video
+
+A complete walkthrough of the application showcasing authentication, project management, task tracking, and dashboard features.
+
+🔗 Watch here:  
+https://drive.google.com/file/d/1hiMjFaPRn7VAIz6FVCvoNA6YDLfLAys0/view?usp=drive_link
+
+---
+
 ## Author
 
 **Nitish** — built as part of a full-stack assignment
